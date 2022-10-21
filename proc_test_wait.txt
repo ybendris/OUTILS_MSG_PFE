@@ -1,0 +1,10 @@
+#il faut la notion de WAIT l'execution ou non
+
+#send:test.dem_accelerate()
+#pause:3
+wait:test.dem_pause(2)
+#pause:1
+wait:t2st.dem_pause(2)
+#pause:1
+wait:t3st.dem_pause(2)
+#pause:1
