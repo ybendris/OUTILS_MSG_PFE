@@ -170,6 +170,7 @@ class DataConnector(Connector):
 		self.matrixout = {}
 		self.matrixin = {}
 
+	"""
 	def granted(self, name, sock=None, items=None, direction=None):
 		if sock is None and len(self.sok)==1:
 			sock = list(self.sok.keys())[0]
@@ -193,7 +194,7 @@ class DataConnector(Connector):
 							if i.find('.')>0:
 								listitems.append("{}.*".format(i[:i.find('.')]))
 							self.matrixin[i] = listitems				
-		
+	"""
 	##pour le pilotage
 	def send_to_one(self, name, msg):
 		if name in self.peername:
@@ -252,11 +253,12 @@ class LogConnector(Connector):
 		Connector.granted(self, name, sock, items, direction)
 		
 	##pour le pilotage
+	"""
 	def send_to_one(self, name, msg):
 		if name in self.peername:
 			sock = self.peername[name]['sok']
 			self.sok[sock]['out'].append(msg)
-
+	"""
 	def send(self, msg):
 		for sock in self.sok:
 			if sock in self.allow_out and self.allow_out[sock]:

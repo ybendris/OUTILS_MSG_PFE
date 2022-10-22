@@ -84,12 +84,14 @@ class ServerNet:
 			return {'cr':False}
 
 	def manage_action_msg(self, msg):
+		"""
 		try:
 			if super().manage_action_msg(msg):
 				return True
 		except:
 			pass
-	
+		"""
+
 		if msg is None or msg.name == 'answ':
 			return False
 			

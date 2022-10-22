@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import sys
+import getopt
+import msvcrt
 import time
 from functools import partial
 import re
@@ -35,13 +38,13 @@ class Bus(ServerNet, ClientNet):
 		return self.peer+self.peercounter
 		
 	def do_bus_process(self):
-		##connexion avec central
+		##connexion des entités avec le central
 		for e in self.__dict__:
 			if isinstance(self.__dict__[e], Connector):
 				conn = self.__dict__[e]
 				conn.inout()
 			
-		##on traite ce qui est arrivé
+		##Traitement du message reçu en fonction de son type de flux
 		self.get_received_other('data')
 		self.get_received_other('log')
 		self.get_received_cmd()
@@ -51,9 +54,9 @@ class Bus(ServerNet, ClientNet):
 		
 	def get_received_cmd(self):
 	#gestion des messages de type CMD arrivant
-	#
 		msg = self.connect_cmd.next_received()
 		while msg is not None:
+			#Si le message est à destination du centrale
 			if msg.dest.lower() == self.name:
 				Log.send("CENTRAL {}/ msg {} {} param {}".format(self.name, msg.id, msg.name, msg.param), level=3, direction="EXEC")
 				#pour Central
@@ -71,8 +74,7 @@ class Bus(ServerNet, ClientNet):
 				
 	
 	def get_received_other(self, item):
-	#gestion des messages qutre que CMD arrivant
-	#
+	#gestion des messages autre que CMD arrivant
 		pipe = self.__dict__['connect_{}'.format(item)]
 		msg = pipe.next_received()
 		while msg is not None:
@@ -115,7 +117,7 @@ class Bus(ServerNet, ClientNet):
 				if re.search("^svc_consumer_", action):
 					type = action[len("svc_consumer_"):]
 					direction = "out"
-					
+
 				if type is not None:
 					conn_name = 'connect_{}'.format(type)				
 					if conn_name in self.__dict__:
@@ -128,15 +130,17 @@ class Bus(ServerNet, ClientNet):
 			return False
 		
 		return True		
-		
+
 	def answer_record_provider(self, *, item, direction, name, host, peer, params=None):
 	#appelé une fois que la connexion est etablie suite à la demande svc_consumer_ ou svc_producer_ lancée
 		Log.send("connection approved for {} {} {}".format(name, direction, item), level=2, direction="EXEC")			
 		connector = self.__dict__['connect_{}'.format(item)]
 		#un tri est fait au niveau de central => on donne params comme info
 		connector.granted_peername(name, host, peer, params, direction)
-		
+
+
 	def action_list(self, cmd, msg, action=None, *args, **kargs):
+		#Ne fonctionne pas
 		if action is None:
 			print(list(self.connect_cmd.peername))
 			self.connect_cmd.check_sock()
@@ -150,22 +154,28 @@ class Bus(ServerNet, ClientNet):
 					selected_srv.append(srv)
 			#print("ask:{} => return:{}".format(action, ", ".join(selected_srv)))
 			return selected_srv
-		
+
 
 ## ===================================
 ## ===================================
 
 if __name__ == '__main__':
-	import sys
-	import getopt
-	import msvcrt
-	
+
+	#Fonction permettant de lire les touches du clavier pressées
 	def kb_func():
 		if msvcrt.kbhit():
+			#Return True if a keypress is waiting to be read
 			try:
+				# getch() : Read a keypress and return the resulting character as a byte string. Nothing is
+				# echoed to the console.
+				# decode() : Decodes the string using the codec registered for encoding.
 				ret = msvcrt.getch().decode()
+				#return ret value (string)
 				return ret
 			except:
+				#The pass statement is used as a placeholder for future code
+				#When the pass statement is executed, nothing happens,
+				#but you avoid getting an error when empty code is not allowed.
 				pass
 
 	HOST = '127.0.0.1'	# The server's hostname or IP address
@@ -177,18 +187,24 @@ if __name__ == '__main__':
 
 
 
-	keypress = kb_func()		
-	while keypress != 'q':			
-		## les commandes claviers
+	keypress = kb_func()
+	# Les commandes claviers permettant de vérifier que le programme est en cours de fonctionnement
+	# q => leave loop and end running
+	while keypress != 'q':
 		if keypress and keypress == 'a':
+			# Permet de vérifier que le serveur de connexion du BUS est bien en marche
 			print(test.connect_cmd.isconnected())
+		"""
+		#Ne fonctionnent pas sans modification
 		elif keypress and keypress == 'z':
 			print(test.action_list())
 		elif keypress and keypress == 'e':
 			pass
+		"""
 		keypress = kb_func()	
 
-		#les echanges socket
+
+		#Lancement du seveur de connexion du BUS pour les echanges par socket avec les autres entités
 		test.do_bus_process()
 		time.sleep(0.01)
 
